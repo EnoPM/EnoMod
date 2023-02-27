@@ -14,14 +14,6 @@ public abstract class CustomRole : RoleData
         Neutral,
     }
 
-    public enum HookResult
-    {
-        Continue,
-        Stop,
-        ReturnTrue,
-        ReturnFalse,
-    }
-
     public static readonly List<CustomRole> Roles = new();
 
     public static CustomRole? GetById(int id)
@@ -51,36 +43,6 @@ public abstract class CustomRole : RoleData
             role.Players.Clear();
             Rpc.UpdateRoleInfo(PlayerControl.LocalPlayer, role.Serialize());
         }
-    }
-
-    public virtual HookResult HookOnAdminTableOpened(MapCountOverlay adminTable)
-    {
-        return HookResult.Continue;
-    }
-
-    public virtual HookResult HookOnCameraUpdated(SurveillanceMinigame cameras)
-    {
-        return HookResult.Continue;
-    }
-
-    public virtual HookResult HookOnPlanetCameraUpdated(PlanetSurveillanceMinigame cameras)
-    {
-        return HookResult.Continue;
-    }
-
-    public virtual HookResult HookOnVitalsUpdated(VitalsMinigame vitals)
-    {
-        return HookResult.Continue;
-    }
-
-    public virtual HookResult HookOnMeetingEnd(ExileController exileController, GameData.PlayerInfo? exiled)
-    {
-        return HookResult.Continue;
-    }
-
-    public virtual HookResult HookOnPlanetCameraNextUpdated(PlanetSurveillanceMinigame minigame, int direction)
-    {
-        return HookResult.Continue;
     }
 
     public virtual bool TriggerEndGame()

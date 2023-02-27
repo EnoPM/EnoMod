@@ -82,22 +82,3 @@ public class ChatPatch
         return string.Join(" ", values);
     }
 }
-
-[HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
-public static class HudManagerUpdatePatch
-{
-    public static void Postfix(HudManager __instance)
-    {
-        CustomButton.HudUpdate();
-        if (!__instance.Chat.isActiveAndEnabled && (AmongUsClient.Instance.NetworkMode == NetworkModes.FreePlay ||
-                                                    CustomSettings.EnableChatInGame))
-        {
-            __instance.Chat.SetVisible(true);
-        }
-
-        if (AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
-        {
-            CustomButton.HudUpdate();
-        }
-    }
-}

@@ -4,6 +4,7 @@ using AmongUs.GameOptions;
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
+using EnoMod.Modules;
 using EnoMod.Roles;
 using HarmonyLib;
 using Reactor;
@@ -41,5 +42,6 @@ public partial class EnoModPlugin : BasePlugin
 
         Reference.Load();
         CustomSettings.Load();
+        Hooks.Load();
     }
 }

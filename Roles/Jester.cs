@@ -1,5 +1,6 @@
 ﻿using EnoMod.Modules;
 using EnoMod.Patches;
+using EnoMod.Modules;
 using UnityEngine;
 
 namespace EnoMod.Roles;
@@ -62,7 +63,7 @@ public class Jester : CustomRole
             CouldUseJesterButton,
             OnMeetingEnd,
             jesterButtonSprite != null ? jesterButtonSprite : hudManager.KillButton.graphic.sprite,
-            CustomButton.ButtonPositions.upperRowRight,
+            CustomButton.ButtonPositions.UpperRowRight,
             hudManager,
             KeyCode.F,
             true,
@@ -72,12 +73,13 @@ public class Jester : CustomRole
         if (_couldown == null || _duration == null) return;
 
         _jesterButton.Timer = _couldown;
-        _jesterButton.EffectDuration = _duration;
+        _jesterButton.EffectDuration(_duration);
     }
 
-    public override HookResult HookOnCameraUpdated(SurveillanceMinigame cameras)
+    [RoleHook(Hooks.AmongUs.CamerasUpdated)]
+    public Hooks.Result OnCamerasUpdated(SurveillanceMinigame cameras)
     {
-        if (!Reference.Jester.JesterSabotageActive || BlockUtilitiesPatch.IsCommsActive()) return HookResult.ReturnTrue;
+        if (!Reference.Jester.JesterSabotageActive || BlockUtilitiesPatch.IsCommsActive()) return Hooks.Result.ReturnTrue;
         for (var j = 0; j < cameras.ViewPorts.Length; j++)
         {
             cameras.SabText[j].color = Color.white;
@@ -85,7 +87,7 @@ public class Jester : CustomRole
             cameras.SabText[j].SetFaceColor(GetColor());
         }
 
-        if (cameras.isStatic) return HookResult.ReturnFalse;
+        if (cameras.isStatic) return Hooks.Result.ReturnFalse;
         cameras.isStatic = true;
         for (var j = 0; j < cameras.ViewPorts.Length; j++)
         {
@@ -93,12 +95,13 @@ public class Jester : CustomRole
             cameras.SabText[j].gameObject.SetActive(true);
         }
 
-        return HookResult.ReturnFalse;
+        return Hooks.Result.ReturnFalse;
     }
 
-    public override HookResult HookOnPlanetCameraUpdated(PlanetSurveillanceMinigame cameras)
+    [RoleHook(Hooks.AmongUs.PlanetCameraUpdated)]
+    public Hooks.Result OnPlanetCameraUpdated(PlanetSurveillanceMinigame cameras)
     {
-        if (!Reference.Jester.JesterSabotageActive || BlockUtilitiesPatch.IsCommsActive()) return HookResult.Continue;
+        if (!Reference.Jester.JesterSabotageActive || BlockUtilitiesPatch.IsCommsActive()) return Hooks.Result.Continue;
         cameras.SabText.text = JesterSabotageText;
         cameras.SabText.SetFaceColor(GetColor());
         if (!cameras.isStatic)
@@ -107,29 +110,32 @@ public class Jester : CustomRole
             cameras.ViewPort.sharedMaterial = cameras.StaticMaterial;
             cameras.SabText.gameObject.SetActive(true);
         }
-        return HookResult.ReturnFalse;
+
+        return Hooks.Result.ReturnFalse;
     }
 
-    public override HookResult HookOnVitalsUpdated(VitalsMinigame vitalsInstance)
+    [RoleHook(Hooks.AmongUs.VitalsUpdated)]
+    public Hooks.Result OnVitalsUpdated(VitalsMinigame vitals)
     {
-        if (!Reference.Jester.JesterSabotageActive || BlockUtilitiesPatch.IsCommsActive()) return HookResult.Continue;
-        vitalsInstance.SabText.color = Color.white;
-        vitalsInstance.SabText.text = JesterSabotageText;
-        vitalsInstance.SabText.SetFaceColor(GetColor());
-        if (!vitalsInstance.SabText.isActiveAndEnabled)
+        if (!Reference.Jester.JesterSabotageActive || BlockUtilitiesPatch.IsCommsActive()) return Hooks.Result.Continue;
+        vitals.SabText.color = Color.white;
+        vitals.SabText.text = JesterSabotageText;
+        vitals.SabText.SetFaceColor(GetColor());
+        if (vitals.SabText.isActiveAndEnabled) return Hooks.Result.ReturnFalse;
+
+        vitals.SabText.gameObject.SetActive(true);
+        foreach (var vital in vitals.vitals)
         {
-            vitalsInstance.SabText.gameObject.SetActive(true);
-            foreach (var vitals in vitalsInstance.vitals)
-            {
-                vitals.gameObject.SetActive(false);
-            }
+            vital.gameObject.SetActive(false);
         }
-        return HookResult.ReturnFalse;
+
+        return Hooks.Result.ReturnFalse;
     }
 
-    public override HookResult HookOnAdminTableOpened(MapCountOverlay adminTable)
+    [RoleHook(Hooks.AmongUs.AdminTableOpened)]
+    public Hooks.Result OnAdminTableOpened(MapCountOverlay adminTable)
     {
-        if (!Reference.Jester.JesterSabotageActive || BlockUtilitiesPatch.IsCommsActive()) return HookResult.Continue;
+        if (!Reference.Jester.JesterSabotageActive || BlockUtilitiesPatch.IsCommsActive()) return Hooks.Result.Continue;
         adminTable.SabotageText.color = Color.white;
         adminTable.isSab = true;
         adminTable.SabotageText.gameObject.SetActive(true);
@@ -137,24 +143,26 @@ public class Jester : CustomRole
         adminTable.SabotageText.SetFaceColor(GetColor());
         adminTable.BackgroundColor.SetColor(Palette.DisabledGrey);
 
-        return HookResult.ReturnFalse;
+        return Hooks.Result.ReturnFalse;
     }
 
-    public override HookResult HookOnMeetingEnd(ExileController exileController, GameData.PlayerInfo? exiled)
+    [RoleHook(Hooks.AmongUs.MeetingEnded)]
+    public Hooks.Result OnMeetingEnd(ExileController exileController, GameData.PlayerInfo? exiled)
     {
         OnMeetingEnd();
-        if (exiled == null) return HookResult.Continue;
+        if (exiled == null) return Hooks.Result.Continue;
         if (HasPlayer(exiled.PlayerId))
         {
             _winner = exiled.PlayerId;
         }
 
-        return HookResult.Continue;
+        return Hooks.Result.Continue;
     }
 
-    public override HookResult HookOnPlanetCameraNextUpdated(PlanetSurveillanceMinigame minigame, int direction)
+    [RoleHook(Hooks.AmongUs.PlanetCameraNextUpdated)]
+    public static Hooks.Result OnPlanetCameraNextUpdated(PlanetSurveillanceMinigame minigame, int direction)
     {
-        if (!Reference.Jester.JesterSabotageActive) return HookResult.Continue;
+        if (!Reference.Jester.JesterSabotageActive) return Hooks.Result.Continue;
 
         if (direction != 0 && Constants.ShouldPlaySfx())
         {
@@ -168,7 +176,7 @@ public class Jester : CustomRole
         minigame.Camera.transform.position =
             survCamera.transform.position + minigame.survCameras[minigame.currentCamera].Offset;
         minigame.LocationName.text = survCamera.CamName;
-        return HookResult.ReturnFalse;
+        return Hooks.Result.ReturnFalse;
     }
 
     public override bool TriggerEndGame()

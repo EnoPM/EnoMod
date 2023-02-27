@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Version>0.1.0</Version>
+        <Description>Example mod using Reactor</Description>
+        <Authors>NuclearPowered</Authors>
+    </PropertyGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Reactor\Reactor.csproj" Private="false" />
+    </ItemGroup>
+
+    <Import Project="../AmongUs.props" />
+</Project>

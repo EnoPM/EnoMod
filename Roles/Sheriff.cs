@@ -44,7 +44,7 @@ public class Sheriff : CustomRole
             CouldUseKillButton,
             OnMeetingEnd,
             hudManager.KillButton.graphic.sprite,
-            CustomButton.ButtonPositions.upperRowRight,
+            CustomButton.ButtonPositions.UpperRowRight,
             hudManager,
             KeyCode.F);
         if (_couldown != null)

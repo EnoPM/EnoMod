@@ -9,49 +9,57 @@ namespace EnoMod.Modules
     public class CustomButton
     {
         public static readonly List<CustomButton> Buttons = new();
-        public ActionButton ActionButton;
-        public GameObject ActionButtonGameObject;
-        public SpriteRenderer ActionButtonRenderer;
-        public Material ActionButtonMat;
-        public TextMeshPro ActionButtonLabelText;
-        public Vector3 PositionOffset;
-        public float MaxTimer = float.MaxValue;
-        public float Timer = 0f;
-        private Action OnClick;
-        private Action InitialOnClick;
-        private Action OnMeetingEnds;
-        public Func<bool> HasButton;
-        public Func<bool> CouldUse;
-        private Action OnEffectEnds;
-        public bool HasEffect;
-        public bool isEffectActive = false;
-        public bool showButtonText = false;
-        public float EffectDuration;
-        public Sprite Sprite;
-        public HudManager hudManager;
-        public bool mirror;
-        public KeyCode? hotkey;
-        private string buttonText;
-        private static readonly int Desat = Shader.PropertyToID("_Desat");
+        private readonly ActionButton _actionButton;
+        private readonly GameObject _actionButtonGameObject;
+        private readonly SpriteRenderer _actionButtonRenderer;
+        private readonly Material _actionButtonMat;
+        private readonly TextMeshPro _actionButtonLabelText;
+        private readonly Vector3 _positionOffset;
+        private readonly float _maxTimer = float.MaxValue;
+        public float Timer;
+        private Action _onClick;
+        private readonly Action _initialOnClick;
+        private readonly Action _onMeetingEnds;
+        private readonly Func<bool> _hasButton;
+        private readonly Func<bool> _couldUse;
+        private readonly Action _onEffectEnds;
+        private readonly bool _hasEffect;
+        private bool _isEffectActive;
+        private readonly bool _showButtonText;
+        public float _effectDuration;
+        private readonly Sprite _sprite;
+        private readonly HudManager _hudManager;
+        private readonly bool _mirror;
+        private readonly KeyCode? _hotkey;
+        private readonly string _buttonText;
+        private static readonly int _desat = Shader.PropertyToID("_Desat");
 
-        private static float _deltaTime = Time.deltaTime / 2;
+        private static float _deltaTime = Time.deltaTime / 1.6f;
 
         public static class ButtonPositions
         {
-            public static readonly Vector3
-                lowerRowRight = new Vector3(-2f, -0.06f, 0); // Not usable for imps beacuse of new button positions!
+            // Not usable for impostors
+            public static readonly Vector3 LowerRowRight = new Vector3(-2f, -0.06f, 0);
+            public static readonly Vector3 LowerRowCenter = new Vector3(-3f, -0.06f, 0);
+            public static readonly Vector3 LowerRowLeft = new Vector3(-4f, -0.06f, 0);
 
-            public static readonly Vector3 lowerRowCenter = new Vector3(-3f, -0.06f, 0);
-            public static readonly Vector3 lowerRowLeft = new Vector3(-4f, -0.06f, 0);
+            // Not usable for impostors
+            public static readonly Vector3 UpperRowRight = new Vector3(0f, 1f, 0f);
 
-            public static readonly Vector3
-                upperRowRight = new Vector3(0f, 1f, 0f); // Not usable for imps beacuse of new button positions!
+            // Not usable for impostors
+            public static readonly Vector3 UpperRowCenter = new Vector3(-1f, 1f, 0f);
+            public static readonly Vector3 UpperRowLeft = new Vector3(-2f, 1f, 0f);
+            public static readonly Vector3 UpperRowFarLeft = new Vector3(-3f, 1f, 0f);
+        }
 
-            public static readonly Vector3
-                upperRowCenter = new Vector3(-1f, 1f, 0f); // Not usable for imps beacuse of new button positions!
+        public void EffectDuration(float duration)
+        {
+            _effectDuration = duration;
+        }
 
-            public static readonly Vector3 upperRowLeft = new Vector3(-2f, 1f, 0f);
-            public static readonly Vector3 upperRowFarLeft = new Vector3(-3f, 1f, 0f);
+        public float EffectDuration()
+        {
+            return _effectDuration;
         }
 
         public CustomButton(
@@ -69,30 +77,30 @@ namespace EnoMod.Modules
             bool mirror = false,
             string buttonText = "")
         {
-            this.hudManager = hudManager;
-            this.OnClick = onClick;
-            this.InitialOnClick = onClick;
-            this.HasButton = hasButton;
-            this.CouldUse = couldUse;
-            this.PositionOffset = positionOffset;
-            this.OnMeetingEnds = onMeetingEnds;
-            this.HasEffect = hasEffect;
-            this.EffectDuration = effectDuration;
-            this.OnEffectEnds = onEffectEnds;
-            this.Sprite = sprite;
-            this.mirror = mirror;
-            this.hotkey = hotkey;
-            this.buttonText = buttonText;
+            this._hudManager = hudManager;
+            this._onClick = onClick;
+            this._initialOnClick = onClick;
+            this._hasButton = hasButton;
+            this._couldUse = couldUse;
+            this._positionOffset = positionOffset;
+            this._onMeetingEnds = onMeetingEnds;
+            this._hasEffect = hasEffect;
+            this._effectDuration = effectDuration;
+            this._onEffectEnds = onEffectEnds;
+            this._sprite = sprite;
+            this._mirror = mirror;
+            this._hotkey = hotkey;
+            this._buttonText = buttonText;
             Timer = 16.2f;
             Buttons.Add(this);
-            ActionButton =
+            _actionButton =
                 UnityEngine.Object.Instantiate(hudManager.KillButton, hudManager.KillButton.transform.parent);
-            ActionButtonGameObject = ActionButton.gameObject;
-            ActionButtonRenderer = ActionButton.graphic;
-            ActionButtonMat = ActionButtonRenderer.material;
-            ActionButtonLabelText = ActionButton.buttonLabelText;
-            var button = ActionButton.GetComponent<PassiveButton>();
-            this.showButtonText = ActionButtonRenderer.sprite == sprite || buttonText != string.Empty;
+            _actionButtonGameObject = _actionButton.gameObject;
+            _actionButtonRenderer = _actionButton.graphic;
+            _actionButtonMat = _actionButtonRenderer.material;
+            _actionButtonLabelText = _actionButton.buttonLabelText;
+            var button = _actionButton.GetComponent<PassiveButton>();
+            this._showButtonText = _actionButtonRenderer.sprite == sprite || buttonText != string.Empty;
             button.OnClick = new Button.ButtonClickedEvent();
             button.OnClick.AddListener((UnityEngine.Events.UnityAction) OnClickEvent);
 
@@ -129,21 +137,21 @@ namespace EnoMod.Modules
 
         public void OnClickEvent()
         {
-            if (!(this.Timer < 0f) || !HasButton() || !CouldUse()) return;
+            if (!(this.Timer < 0f) || !_hasButton() || !_couldUse()) return;
 
-            ActionButtonRenderer.color = new Color(1f, 1f, 1f, 0.3f);
-            this.OnClick();
+            _actionButtonRenderer.color = new Color(1f, 1f, 1f, 0.3f);
+            this._onClick();
 
-            if (!this.HasEffect || this.isEffectActive) return;
+            if (!this._hasEffect || this._isEffectActive) return;
 
-            this.Timer = this.EffectDuration;
-            ActionButton.cooldownTimerText.color = new Color(0F, 0.8F, 0F);
-            this.isEffectActive = true;
+            this.Timer = this.EffectDuration();
+            _actionButton.cooldownTimerText.color = new Color(0F, 0.8F, 0F);
+            this._isEffectActive = true;
         }
 
         public static void HudUpdate()
         {
-            Buttons.RemoveAll(item => item.ActionButton == null);
+            Buttons.RemoveAll(item => item._actionButton == null);
 
             foreach (var button in Buttons)
             {
@@ -161,12 +169,12 @@ namespace EnoMod.Modules
 
         public static void MeetingEndedUpdate()
         {
-            Buttons.RemoveAll(item => item.ActionButton == null);
+            Buttons.RemoveAll(item => item._actionButton == null);
             foreach (var button in Buttons)
             {
                 try
                 {
-                    button.OnMeetingEnds();
+                    button._onMeetingEnds();
                     button.Update();
                 }
                 catch (NullReferenceException)
@@ -183,7 +191,7 @@ namespace EnoMod.Modules
             {
                 try
                 {
-                    button.Timer = button.MaxTimer;
+                    button.Timer = button._maxTimer;
                     button.Update();
                 }
                 catch (NullReferenceException)
@@ -198,13 +206,13 @@ namespace EnoMod.Modules
         {
             if (isActive)
             {
-                ActionButtonGameObject.SetActive(true);
-                ActionButtonRenderer.enabled = true;
+                _actionButtonGameObject.SetActive(true);
+                _actionButtonRenderer.enabled = true;
             }
             else
             {
-                ActionButtonGameObject.SetActive(false);
-                ActionButtonRenderer.enabled = false;
+                _actionButtonGameObject.SetActive(false);
+                _actionButtonRenderer.enabled = false;
             }
         }
 
@@ -214,25 +222,25 @@ namespace EnoMod.Modules
             if (localPlayer == null) return;
             var movable = localPlayer is { PlayerControl.moveable: true };
 
-            if (MeetingHud.Instance || ExileController.Instance || !HasButton())
+            if (MeetingHud.Instance || ExileController.Instance || !_hasButton())
             {
                 SetActive(false);
                 return;
             }
 
-            SetActive(hudManager.UseButton.isActiveAndEnabled || hudManager.PetButton.isActiveAndEnabled);
+            SetActive(_hudManager.UseButton.isActiveAndEnabled || _hudManager.PetButton.isActiveAndEnabled);
 
-            ActionButtonRenderer.sprite = Sprite;
-            if (showButtonText && buttonText != string.Empty)
+            _actionButtonRenderer.sprite = _sprite;
+            if (_showButtonText && _buttonText != string.Empty)
             {
-                ActionButton.OverrideText(buttonText);
+                _actionButton.OverrideText(_buttonText);
             }
 
-            ActionButtonLabelText.enabled = showButtonText; // Only show the text if it's a kill button
-            if (hudManager.UseButton != null)
+            _actionButtonLabelText.enabled = _showButtonText; // Only show the text if it's a kill button
+            if (_hudManager.UseButton != null)
             {
-                var pos = hudManager.UseButton.transform.localPosition;
-                if (mirror)
+                var pos = _hudManager.UseButton.transform.localPosition;
+                if (_mirror)
                 {
                     var main = Camera.main;
                     if (main != null)
@@ -244,45 +252,45 @@ namespace EnoMod.Modules
                     }
                 }
 
-                ActionButton.transform.localPosition = pos + PositionOffset;
+                _actionButton.transform.localPosition = pos + _positionOffset;
             }
 
-            if (CouldUse())
+            if (_couldUse())
             {
-                ActionButtonRenderer.color = ActionButtonLabelText.color = Palette.EnabledColor;
-                ActionButtonMat.SetFloat(Desat, 0f);
+                _actionButtonRenderer.color = _actionButtonLabelText.color = Palette.EnabledColor;
+                _actionButtonMat.SetFloat(_desat, 0f);
             }
             else
             {
-                ActionButtonRenderer.color = ActionButtonLabelText.color = Palette.DisabledClear;
-                ActionButtonMat.SetFloat(Desat, 1f);
+                _actionButtonRenderer.color = _actionButtonLabelText.color = Palette.DisabledClear;
+                _actionButtonMat.SetFloat(_desat, 1f);
             }
 
             if (Timer >= 0)
             {
-                if (HasEffect && isEffectActive)
+                if (_hasEffect && _isEffectActive)
                     Timer -= _deltaTime;
                 else if (!localPlayer.PlayerControl.inVent && movable)
                     Timer -= _deltaTime;
             }
 
-            if (Timer <= 0 && HasEffect && isEffectActive)
+            if (Timer <= 0 && _hasEffect && _isEffectActive)
             {
-                isEffectActive = false;
-                ActionButton.cooldownTimerText.color = Palette.EnabledColor;
-                OnEffectEnds();
+                _isEffectActive = false;
+                _actionButton.cooldownTimerText.color = Palette.EnabledColor;
+                _onEffectEnds();
             }
 
-            ActionButton.SetCoolDown(Timer, (HasEffect && isEffectActive) ? EffectDuration : MaxTimer);
+            _actionButton.SetCoolDown(Timer, (_hasEffect && _isEffectActive) ? EffectDuration() : _maxTimer);
 
             // Trigger OnClickEvent if the hotkey is being pressed down
-            if (hotkey.HasValue && Input.GetKeyDown(hotkey.Value))
+            if (_hotkey.HasValue && Input.GetKeyDown(_hotkey.Value))
             {
                 OnClickEvent();
             }
             else
             {
-                OnClick = InitialOnClick;
+                _onClick = _initialOnClick;
             }
         }
     }

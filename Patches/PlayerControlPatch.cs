@@ -55,6 +55,7 @@ public class PlayerControlFixedUpdatePatch
 
     public static void RenderImpostorOutline()
     {
+        if (PlayerControl.LocalPlayer == null) return;
         if (PlayerControl.LocalPlayer.Data.RoleType != RoleTypes.Impostor) return;
 
         var target = RenderTarget(false, false, new List<PlayerControl>());

@@ -61,9 +61,14 @@ public static class BlockUtilitiesPatch
     {
         public static void Postfix(ExileController __instance, GameData.PlayerInfo? exiled)
         {
-            foreach (var role in CustomRole.Roles)
+            switch (Hooks.Trigger(Hooks.AmongUs.MeetingEnded, __instance))
             {
-                role.HookOnMeetingEnd(__instance, exiled);
+                case Hooks.Result.ReturnTrue:
+                case Hooks.Result.ReturnFalse:
+                    return;
+                case Hooks.Result.Continue:
+                default:
+                    break;
             }
         }
     }
@@ -73,28 +78,22 @@ public static class BlockUtilitiesPatch
     {
         public static bool Prefix(VitalsMinigame __instance)
         {
-            if (UpdateVitals(__instance) == CustomRole.HookResult.ReturnFalse) return false;
-            foreach (var role in CustomRole.Roles)
+            if (UpdateVitals(__instance) == Hooks.Result.ReturnFalse) return false;
+            switch (Hooks.Trigger(Hooks.AmongUs.VitalsUpdated, __instance))
             {
-                switch (role.HookOnVitalsUpdated(__instance))
-                {
-                    case CustomRole.HookResult.Continue:
-                        continue;
-                    case CustomRole.HookResult.Stop:
-                        break;
-                    case CustomRole.HookResult.ReturnTrue:
-                        return true;
-                    case CustomRole.HookResult.ReturnFalse:
-                        return false;
-                    default:
-                        continue;
-                }
+                case Hooks.Result.ReturnTrue:
+                    return true;
+                case Hooks.Result.ReturnFalse:
+                    return false;
+                case Hooks.Result.Continue:
+                default:
+                    break;
             }
 
             return true;
         }
 
-        public static CustomRole.HookResult UpdateVitals(VitalsMinigame vitalsInstance)
+        public static Hooks.Result UpdateVitals(VitalsMinigame vitalsInstance)
         {
             vitalsInstance.SabText.color = Color.white;
 
@@ -119,7 +118,7 @@ public static class BlockUtilitiesPatch
                 }
             }
 
-            return _vitalsBlocked() ? CustomRole.HookResult.ReturnFalse : CustomRole.HookResult.Continue;
+            return _vitalsBlocked() ? Hooks.Result.ReturnFalse : Hooks.Result.Continue;
         }
     }
 
@@ -128,28 +127,22 @@ public static class BlockUtilitiesPatch
     {
         public static bool Prefix(PlanetSurveillanceMinigame __instance)
         {
-            if (UpdateCameras(__instance) == CustomRole.HookResult.ReturnFalse) return false;
-            foreach (var role in CustomRole.Roles)
+            if (UpdateCameras(__instance) == Hooks.Result.ReturnFalse) return false;
+            switch (Hooks.Trigger(Hooks.AmongUs.PlanetCameraUpdated, __instance))
             {
-                switch (role.HookOnPlanetCameraUpdated(__instance))
-                {
-                    case CustomRole.HookResult.Continue:
-                        continue;
-                    case CustomRole.HookResult.Stop:
-                        break;
-                    case CustomRole.HookResult.ReturnTrue:
-                        return true;
-                    case CustomRole.HookResult.ReturnFalse:
-                        return false;
-                    default:
-                        continue;
-                }
+                case Hooks.Result.ReturnTrue:
+                    return true;
+                case Hooks.Result.ReturnFalse:
+                    return false;
+                case Hooks.Result.Continue:
+                default:
+                    break;
             }
 
             return true;
         }
 
-        private static CustomRole.HookResult UpdateCameras(PlanetSurveillanceMinigame cameras)
+        private static Hooks.Result UpdateCameras(PlanetSurveillanceMinigame cameras)
         {
             cameras.SabText.color = Color.white;
             if (IsCommsActive())
@@ -172,7 +165,7 @@ public static class BlockUtilitiesPatch
                 cameras.SabText.gameObject.SetActive(true);
             }
 
-            return _camsBlocked() ? CustomRole.HookResult.ReturnFalse : CustomRole.HookResult.Continue;
+            return _camsBlocked() ? Hooks.Result.ReturnFalse : Hooks.Result.Continue;
         }
     }
 
@@ -181,29 +174,24 @@ public static class BlockUtilitiesPatch
     {
         public static bool Prefix(PlanetSurveillanceMinigame __instance, int direction)
         {
-            if (UpdateNextCamera(__instance, direction) == CustomRole.HookResult.ReturnFalse) return false;
-            foreach (var role in CustomRole.Roles)
+            if (UpdateNextCamera(__instance, direction) == Hooks.Result.ReturnFalse) return false;
+            switch (Hooks.Trigger(Hooks.AmongUs.PlanetCameraNextUpdated, __instance, direction))
             {
-                switch (role.HookOnPlanetCameraNextUpdated(__instance, direction))
-                {
-                    case CustomRole.HookResult.Continue:
-                        continue;
-                    case CustomRole.HookResult.Stop:
-                        break;
-                    case CustomRole.HookResult.ReturnTrue:
-                        return true;
-                    case CustomRole.HookResult.ReturnFalse:
-                        return false;
-                    default:
-                        continue;
-                }
+                case Hooks.Result.ReturnTrue:
+                    return true;
+                case Hooks.Result.ReturnFalse:
+                    return false;
+                case Hooks.Result.Continue:
+                default:
+                    break;
             }
+
             return true;
         }
 
-        private static CustomRole.HookResult UpdateNextCamera(PlanetSurveillanceMinigame minigame, int direction)
+        private static Hooks.Result UpdateNextCamera(PlanetSurveillanceMinigame minigame, int direction)
         {
-            if (!_camsBlocked()) return CustomRole.HookResult.Continue;
+            if (!_camsBlocked()) return Hooks.Result.Continue;
 
             if (direction != 0 && Constants.ShouldPlaySfx())
             {
@@ -217,7 +205,7 @@ public static class BlockUtilitiesPatch
             minigame.Camera.transform.position =
                 survCamera.transform.position + minigame.survCameras[minigame.currentCamera].Offset;
             minigame.LocationName.text = survCamera.CamName;
-            return CustomRole.HookResult.ReturnFalse;
+            return Hooks.Result.ReturnFalse;
         }
     }
 
@@ -226,28 +214,22 @@ public static class BlockUtilitiesPatch
     {
         public static bool Prefix(SurveillanceMinigame __instance)
         {
-            if (UpdateCamerasView(__instance) == CustomRole.HookResult.ReturnFalse) return false;
-            foreach (var role in CustomRole.Roles)
+            if (UpdateCamerasView(__instance) == Hooks.Result.ReturnFalse) return false;
+            switch (Hooks.Trigger(Hooks.AmongUs.CamerasUpdated, __instance))
             {
-                switch (role.HookOnCameraUpdated(__instance))
-                {
-                    case CustomRole.HookResult.Continue:
-                        continue;
-                    case CustomRole.HookResult.Stop:
-                        break;
-                    case CustomRole.HookResult.ReturnTrue:
-                        return true;
-                    case CustomRole.HookResult.ReturnFalse:
-                        return false;
-                    default:
-                        continue;
-                }
+                case Hooks.Result.ReturnTrue:
+                    return true;
+                case Hooks.Result.ReturnFalse:
+                    return false;
+                case Hooks.Result.Continue:
+                default:
+                    break;
             }
 
             return true;
         }
 
-        public static CustomRole.HookResult UpdateCamerasView(SurveillanceMinigame cameras)
+        public static Hooks.Result UpdateCamerasView(SurveillanceMinigame cameras)
         {
             for (var j = 0; j < cameras.ViewPorts.Length; j++)
             {
@@ -266,7 +248,7 @@ public static class BlockUtilitiesPatch
             }
 
             if (cameras.isStatic || !_camsBlocked())
-                return _camsBlocked() ? CustomRole.HookResult.ReturnFalse : CustomRole.HookResult.Continue;
+                return _camsBlocked() ? Hooks.Result.ReturnFalse : Hooks.Result.Continue;
             cameras.isStatic = true;
             for (var j = 0; j < cameras.ViewPorts.Length; j++)
             {
@@ -274,7 +256,7 @@ public static class BlockUtilitiesPatch
                 cameras.SabText[j].gameObject.SetActive(true);
             }
 
-            return _camsBlocked() ? CustomRole.HookResult.ReturnFalse : CustomRole.HookResult.Continue;
+            return _camsBlocked() ? Hooks.Result.ReturnFalse : Hooks.Result.Continue;
         }
     }
 
@@ -283,23 +265,17 @@ public static class BlockUtilitiesPatch
     {
         public static bool Prefix(MapCountOverlay __instance)
         {
-            if (UpdateAdminOverlay(__instance) == CustomRole.HookResult.ReturnFalse) return false;
+            if (UpdateAdminOverlay(__instance) == Hooks.Result.ReturnFalse) return false;
 
-            foreach (var role in CustomRole.Roles)
+            switch (Hooks.Trigger(Hooks.AmongUs.AdminTableOpened, __instance))
             {
-                switch (role.HookOnAdminTableOpened(__instance))
-                {
-                    case CustomRole.HookResult.Continue:
-                        continue;
-                    case CustomRole.HookResult.Stop:
-                        break;
-                    case CustomRole.HookResult.ReturnTrue:
-                        return true;
-                    case CustomRole.HookResult.ReturnFalse:
-                        return false;
-                    default:
-                        continue;
-                }
+                case Hooks.Result.ReturnTrue:
+                    return true;
+                case Hooks.Result.ReturnFalse:
+                    return false;
+                case Hooks.Result.Continue:
+                default:
+                    break;
             }
 
             foreach (var counterArea in __instance.CountAreas)
@@ -342,7 +318,7 @@ public static class BlockUtilitiesPatch
             return false;
         }
 
-        private static CustomRole.HookResult UpdateAdminOverlay(MapCountOverlay adminTable)
+        private static Hooks.Result UpdateAdminOverlay(MapCountOverlay adminTable)
         {
             adminTable.SabotageText.color = Color.white;
             var commsActive = IsCommsActive();
@@ -364,15 +340,15 @@ public static class BlockUtilitiesPatch
                     adminTable.BackgroundColor.SetColor(Palette.Black);
                 }
 
-                return CustomRole.HookResult.ReturnFalse;
+                return Hooks.Result.ReturnFalse;
             }
 
-            if (!adminTable.isSab || commsActive) return CustomRole.HookResult.Continue;
+            if (!adminTable.isSab || commsActive) return Hooks.Result.Continue;
 
             adminTable.isSab = false;
             adminTable.BackgroundColor.SetColor(Color.green);
             adminTable.SabotageText.gameObject.SetActive(false);
-            return CustomRole.HookResult.Continue;
+            return Hooks.Result.Continue;
         }
     }
 }
