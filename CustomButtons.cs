@@ -1,4 +1,5 @@
-﻿using EnoMod.Modules;
+﻿using EnoMod.Customs;
+using EnoMod.Kernel;
 using HarmonyLib;
 
 namespace EnoMod;
@@ -16,10 +17,7 @@ public static class CustomButtons
 
     private static void CreateButtons(HudManager hudManager)
     {
-        foreach (var role in CustomRole.Roles)
-        {
-            role.CreateCustomButtons(hudManager);
-        }
+        Hooks.Trigger(CustomHooks.LoadCustomButtons, hudManager);
 
         _initialized = true;
     }

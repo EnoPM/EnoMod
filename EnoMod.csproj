@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <Version>0.1.0</Version>
-        <Description>Example mod using Reactor</Description>
-        <Authors>NuclearPowered</Authors>
+        <Description>Vanilla Plus and EnoMod</Description>
+        <Authors>GoEno</Authors>
     </PropertyGroup>
     <ItemGroup>
         <EmbeddedResource Include="Resources\**" />
