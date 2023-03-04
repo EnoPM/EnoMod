@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using EnoMod.Kernel;
+using EnoMod.Utils;
 using Reactor.Networking.Attributes;
 
 namespace EnoMod.Customs.Modules;
@@ -12,7 +13,7 @@ public static class RolesAssignment
     {
         if (!Singleton<CustomOption.Holder>.Instance.EnableRoles) return Hooks.Result.Continue;
         CustomRole.ClearPlayers();
-        var playerList = PlayerCache.AllPlayers.Where(player => player != null).Select(player => player?.PlayerControl);
+        var playerList = PlayerCache.AllPlayers.Select(player => player.PlayerControl).ToList();
         var roleNames = new List<string>();
         foreach (var role in CustomRole.Roles)
         {
@@ -28,6 +29,9 @@ public static class RolesAssignment
                 roleNames.Add(role.Name);
             }
         }
+
+        playerList = playerList.Randomize();
+        roleNames = roleNames.Randomize();
 
         foreach (var player in playerList)
         {
