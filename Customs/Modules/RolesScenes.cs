@@ -34,17 +34,14 @@ public static class RolesScenes
 
     [EnoHook(CustomHooks.IntroCutsceneBeginCrewmate)]
     public static Hooks.Result IntroCutsceneBeginCrewmate(
-        IntroCutscene cutscene,
-        ref Il2CppSystem.Collections.Generic.List<PlayerControl> teamToDisplay)
+        IntroCutscene cutscene)
     {
         SetupIntroTeam(cutscene);
         return Hooks.Result.Continue;
     }
 
     [EnoHook(CustomHooks.IntroCutsceneBeginImpostor)]
-    public static Hooks.Result IntroCutsceneBeginImpostor(
-        IntroCutscene cutscene,
-        ref Il2CppSystem.Collections.Generic.List<PlayerControl> teamToDisplay)
+    public static Hooks.Result IntroCutsceneBeginImpostor(IntroCutscene cutscene)
     {
         SetupIntroTeam(cutscene);
         return Hooks.Result.Continue;
