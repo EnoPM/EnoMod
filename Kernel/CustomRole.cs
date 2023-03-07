@@ -35,15 +35,23 @@ public abstract class CustomRole : RoleData
 
     public static CustomRole? GetByPlayer(PlayerControl? player)
     {
-        return player == null ? null : Roles.Find(r => r.HasPlayer(player.PlayerId));
+        return player == null ? null : GetByPlayer(player.PlayerId);
     }
 
-    public static void ClearPlayers()
+    public static CustomRole? GetByPlayer(byte playerId)
+    {
+        return Roles.Find(r => r.HasPlayer(playerId));
+    }
+
+    public static void ClearPlayers(bool shareChanges = true)
     {
         foreach (var role in Roles)
         {
             role.Players.Clear();
-            RolesAssignment.UpdateRoleInfo(PlayerControl.LocalPlayer, role.Serialize());
+            if (shareChanges && PlayerCache.LocalPlayer != null)
+            {
+                RolesAssignment.UpdateRoleInfo(PlayerCache.LocalPlayer, role.Serialize());
+            }
         }
     }
 
@@ -53,11 +61,6 @@ public abstract class CustomRole : RoleData
         {
             return Colors.FromHex(HexColor);
         }
-    }
-
-    public virtual bool TriggerEndGame()
-    {
-        return false;
     }
 
     public bool CanBe(PlayerControl player)
@@ -121,6 +124,7 @@ public abstract class CustomRole : RoleData
         {
             role.RemovePlayer(playerId);
         }
+
         Players.Add(new RolePlayer { PlayerId = playerId });
         if (PlayerCache.LocalPlayer == null) return;
         RolesAssignment.UpdateRoleInfo(PlayerCache.LocalPlayer, Serialize());
@@ -163,6 +167,8 @@ public class RoleData
     public string HexColor { get; set; }
 
     public bool CanTarget { get; set; }
+
+    public bool HasTasks { get; set; } = true;
 
     public string Serialize()
     {

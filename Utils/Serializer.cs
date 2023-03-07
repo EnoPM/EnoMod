@@ -10,13 +10,12 @@ public static class Serializer
 {
     public static string Serialize<T>(T data)
     {
-        return ToB64(JsonSerializer.Serialize(data));
+        return JsonSerializer.Serialize(data);
     }
 
     public static T Deserialize<T>(string data)
     {
-        return JsonSerializer.Deserialize<T>(FromB64(data)) ??
-               throw new EnoModException("Deserialization error");
+        return JsonSerializer.Deserialize<T>(data) ?? throw new EnoModException("Deserialization error");
     }
 
     private static string ToB64(string data)

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Text.Json;
+﻿using System.Text.Json;
 using EnoMod.Customs;
 using Reactor.Networking.Attributes;
 
@@ -8,32 +6,6 @@ namespace EnoMod.Kernel;
 
 public static class Rpc
 {
-
-    [MethodRpc((uint) CustomRpc.ShieldedMurderAttempt)]
-    public static void ShieldedMurderAttempt(PlayerControl _, string text)
-    {
-        var murderInfo = Deserialize<MurderInfo>(text);
-        if (murderInfo.Murder != PlayerControl.LocalPlayer.PlayerId) return;
-        var target = PlayerCache.AllPlayers.Find(p => p != null && p.PlayerId == murderInfo.Target);
-        target?.PlayerControl.ShowFailedMurder();
-    }
-
-    [MethodRpc((uint) CustomRpc.MurderAttempt)]
-    public static void MurderAttempt(PlayerControl player, string text)
-    {
-        var murderInfo = Deserialize<MurderInfo>(text);
-        var murder = PlayerCache.AllPlayers.Find(p => p.PlayerId == murderInfo.Murder);
-        var target = PlayerCache.AllPlayers.Find(p => p.PlayerId == murderInfo.Target);
-        if (murder == null || target == null) return;
-        murder.PlayerControl.MurderPlayer(target.PlayerControl);
-    }
-
-    public class MurderInfo
-    {
-        public byte? Murder { get; set; }
-        public byte Target { get; set; }
-    }
-
     [MethodRpc((uint) CustomRpc.ShareCustomOptions)]
     public static void ShareCustomOptions(PlayerControl _, string text)
     {

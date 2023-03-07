@@ -26,9 +26,14 @@ public class PlayerCache
         return LocalPlayer != null && player.Data.PlayerId == LocalPlayer.Data.PlayerId;
     }
 
+    public static PlayerCache? GetPlayerByName(string name)
+    {
+        return AllPlayers.Find(player => player.Data.PlayerName == name);
+    }
+
     public static PlayerCache? GetPlayerById(byte playerId)
     {
-        return AllPlayers.Find(player => player != null && player.PlayerId == playerId);
+        return AllPlayers.Find(player => player.PlayerId == playerId);
     }
 
     public static PlayerCache? GetPlayerById(int? targetId)

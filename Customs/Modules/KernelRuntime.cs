@@ -57,7 +57,6 @@ public static class KernelRuntime
         {
             var tabInfo = CustomOption.Tab.Tabs[index];
             GameObject tab;
-            SpriteRenderer tabHighlight;
             if (index == 0)
             {
                 tab = UnityEngine.Object.Instantiate(roleTab, roleTab.transform.parent);
@@ -70,7 +69,7 @@ public static class KernelRuntime
             }
 
             customTabs[tabInfo.Key] = tab;
-            tabHighlight = GetTabHighlight(tab, $"{tabInfo.Key}Tab", tabInfo.IconPath);
+            var tabHighlight = GetTabHighlight(tab, $"{tabInfo.Key}Tab", tabInfo.IconPath);
             customTabHighlights[tabInfo.Key] = tabHighlight;
         }
 
@@ -211,7 +210,7 @@ public static class KernelRuntime
     [EnoHook(CustomHooks.StringOptionDecrease)]
     public static Hooks.Result StringOptionDecrease(StringOption stringOption)
     {
-        var option = CustomOption.Tab.Options().FirstOrDefault(option => option?.OptionBehaviour == stringOption);
+        var option = CustomOption.Tab.Options().FirstOrDefault(option => option.OptionBehaviour == stringOption);
         if (option == null) return Hooks.Result.ReturnTrue;
         option.UpdateSelection(option.SelectionIndex - 1);
         return Hooks.Result.ReturnFalse;

@@ -40,17 +40,22 @@ public enum CustomHooks
     PlayerControlHandleRpc,
     LoadCustomOptions,
     LoadCustomButtons,
+    ExileControllerWrapUp,
+    PlayerVoteAreaSelect,
 }
 
 public enum CustomRpc : uint
 {
-    ShareGameState = 1,
-    ShareCustomOptions = 2,
-    ShieldedMurderAttempt = 3,
-    MurderAttempt = 4,
-    UpdateRoleInfo = 5,
-    JesterSabotageStart = 6,
-    JesterSabotageEnd = 7,
-    ShareCustomRoles = 8,
-    RevivePlayer = 9,
+    ShareGameState,
+    ShareCustomOptions,
+    ShieldedMurderAttempt,
+    MurderAttempt,
+    UpdateRoleInfo,
+    JesterSabotageStart,
+    JesterSabotageEnd,
+    ShareCustomRoles,
+    RevivePlayer,
+    ShareEndGameState,
+    EndGameStateReceived,
+    ResetRoles,
 }

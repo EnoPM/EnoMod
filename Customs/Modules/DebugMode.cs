@@ -4,17 +4,6 @@ namespace EnoMod.Customs.Modules;
 
 public static class DebugMode
 {
-    [EnoHook(CustomHooks.EndGameCheck)]
-    public static Hooks.Result EndGameCheck()
-    {
-        if (Singleton<CustomOption.Holder>.Instance.DebugMode)
-        {
-            return Hooks.Result.ReturnFalse;
-        }
-
-        return Hooks.Result.Continue;
-    }
-
     [EnoHook(CustomHooks.GameStartManagerUpdate)]
     public static Hooks.Result GameStartManagerUpdate(GameStartManager gameStartManager)
     {

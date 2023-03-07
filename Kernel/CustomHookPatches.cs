@@ -78,7 +78,8 @@ public static class CustomHookPatches
             return H.Hook(
                 true,
                 CustomHooks.PlanetCameraNextUpdated,
-                __instance);
+                __instance,
+                direction);
         }
     }
 
@@ -461,7 +462,55 @@ public static class CustomHookPatches
     {
         public static void Postfix(ExileController __instance)
         {
-            CustomButton.MeetingEndedUpdate();
+            H.Hook(
+                true,
+                CustomHooks.ExileControllerWrapUp,
+                __instance);
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerVoteArea), nameof(PlayerVoteArea.Select))]
+    public static class PlayerVoteAreaSelectPatch
+    {
+        public static bool Prefix(MeetingHud __instance)
+        {
+            return H.Hook(
+                true,
+                CustomHooks.PlayerVoteAreaSelect,
+                __instance);
+        }
+    }
+
+    [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Start))]
+    public static class GameStartManagerStartPatch
+    {
+        public static void Postfix(GameStartManager __instance)
+        {
+            System.Console.WriteLine($"[{PlayerCache.LocalPlayer?.Data.PlayerName}] GameStartManagerStartPatch");
+            EndGameState.Reset();
+            CustomRole.ClearPlayers(false);
+        }
+    }
+
+    [HarmonyPatch(typeof(Console), nameof(Console.CanUse))]
+    public static class ConsoleCanUsePatch
+    {
+        public static bool Prefix(
+            ref float __result,
+            Console __instance,
+            [HarmonyArgument(0)] GameData.PlayerInfo pc,
+            [HarmonyArgument(1)] out bool canUse,
+            [HarmonyArgument(2)] out bool couldUse)
+        {
+            canUse = couldUse = false;
+            if (__instance.AllowImpostor) return true;
+            if (CustomRole.GetLocalPlayerRole() is { HasTasks: false })
+            {
+                return __instance.AllowImpostor;
+            }
+
+            __result = float.MaxValue;
+            return true;
         }
     }
     /*

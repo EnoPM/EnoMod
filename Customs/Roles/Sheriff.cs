@@ -1,4 +1,5 @@
 ﻿using AmongUs.GameOptions;
+using EnoMod.Customs.Modules;
 using EnoMod.Kernel;
 using UnityEngine;
 
@@ -42,12 +43,14 @@ public class Sheriff : CustomRole
     [EnoHook(CustomHooks.LoadCustomButtons)]
     public Hooks.Result CreateCustomButtons(HudManager hudManager)
     {
+        var buttonSprite = Utils.Resources.LoadSpriteFromResources("EnoMod.Resources.Buttons.Sheriff.png", 115f);
+        if (buttonSprite == null) return Hooks.Result.Continue;
         _killButton = new CustomButton(
             OnKillButtonClick,
             HasKillButton,
             CouldUseKillButton,
-            OnMeetingEnd,
-            hudManager.KillButton.graphic.sprite,
+            ResetSheriffCouldown,
+            buttonSprite,
             CustomButton.ButtonPositions.UpperRowRight,
             hudManager,
             KeyCode.F);
@@ -58,7 +61,7 @@ public class Sheriff : CustomRole
         return Hooks.Result.Continue;
     }
 
-    private void OnMeetingEnd()
+    private void ResetSheriffCouldown()
     {
         if (_couldown != null && _killButton != null)
         {
@@ -98,11 +101,11 @@ public class Sheriff : CustomRole
 
         System.Console.WriteLine(
             $"{PlayerControl.LocalPlayer.Data.PlayerName}: {killer.Data.PlayerName} want kill {target.Data.PlayerName}");
-        if (Game.CheckMurderAttempt(killer, target) == Game.MurderAttemptResult.SuppressKill)
+        if (Shields.CheckMurderAttempt(killer, target) == Shields.MurderAttemptResult.SuppressKill)
         {
-            Rpc.ShieldedMurderAttempt(
+            Shields.ShieldedMurderAttempt(
                 killer,
-                Rpc.Serialize(new Rpc.MurderInfo { Murder = killer.PlayerId, Target = target.PlayerId }));
+                Rpc.Serialize(new MurderInfo { Murder = killer.PlayerId, Target = target.PlayerId }));
         }
         else
         {
@@ -110,11 +113,11 @@ public class Sheriff : CustomRole
             {
                 target = player;
             }
-            Rpc.MurderAttempt(
+            Shields.MurderAttempt(
                 player,
-                Rpc.Serialize(new Rpc.MurderInfo { Murder = player.PlayerId, Target = target.PlayerId }));
+                Rpc.Serialize(new MurderInfo { Murder = player.PlayerId, Target = target.PlayerId }));
         }
 
-        OnMeetingEnd();
+        ResetSheriffCouldown();
     }
 }

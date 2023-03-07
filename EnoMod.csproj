@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Version>0.1.0</Version>
-        <Description>Vanilla Plus and EnoMod</Description>
+        <Version>1.0.0</Version>
+        <Description>EnoMod</Description>
         <Authors>GoEno</Authors>
     </PropertyGroup>
     <ItemGroup>
@@ -12,4 +12,11 @@
     </ItemGroup>
 
     <Import Project="../AmongUs.props" />
+
+    <Target Name="PrebuildCloseApps" BeforeTargets="Build">
+        <Exec Command="powershell -NonInteractive -executionpolicy Unrestricted -File close-running-processes.ps1" />
+    </Target>
+    <Target Name="PostbuildStartApps" AfterTargets="Build">
+        <Exec Command="powershell -NonInteractive -executionpolicy Unrestricted -File start-among-us.ps1" />
+    </Target>
 </Project>

@@ -20,6 +20,8 @@ public class Shields
     public ShieldsState State = new();
 
     public CustomOption ShieldFirstKilledPlayer;
+    public CustomOption AnyoneCanSeeShield;
+    public CustomOption AnyoneCanSeeMurderAttempt;
     public CustomOption RemoveShieldInFirstKill;
     public CustomOption RemoveShieldInFirstMeeting;
 
@@ -30,6 +32,28 @@ public class Shields
     private static readonly float ShieldSpriteSize = 1f;
     private static readonly float SpriteSize;
 
+    public enum MurderAttemptResult
+    {
+        PerformKill,
+        SuppressKill,
+    }
+
+    public static MurderAttemptResult CheckMurderAttempt(PlayerControl? killer, PlayerControl target)
+    {
+        // Modified vanilla checks
+        if (AmongUsClient.Instance.IsGameOver) return MurderAttemptResult.SuppressKill;
+        if (killer == null || killer.Data == null || killer.Data.IsDead || killer.Data.Disconnected)
+            return MurderAttemptResult.SuppressKill; // Allow non Impostor kills compared to vanilla code
+        if (target == null || target.Data == null || target.Data.IsDead || target.Data.Disconnected)
+            return MurderAttemptResult.SuppressKill; // Allow killing players in vents compared to vanilla code
+        if (!Singleton<Shields>.Instance.ShieldFirstKilledPlayer)
+            return MurderAttemptResult.PerformKill;
+        if (target != killer && Singleton<Shields>.Instance.IsShielded(target))
+            return MurderAttemptResult.SuppressKill;
+
+        return MurderAttemptResult.PerformKill;
+    }
+
     [EnoHook(CustomHooks.LoadCustomOptions)]
     public Hooks.Result LoadCustomOptions()
     {
@@ -37,6 +61,16 @@ public class Shields
             nameof(ShieldFirstKilledPlayer),
             Colors.Cs("#0780a8", "Shield first killed player"),
             false);
+        AnyoneCanSeeShield = Singleton<CustomOption.Holder>.Instance.Settings.CreateBool(
+            nameof(AnyoneCanSeeShield),
+            Colors.Cs("#15a0cf", "Anyone can see shield"),
+            false,
+            ShieldFirstKilledPlayer);
+        AnyoneCanSeeMurderAttempt = Singleton<CustomOption.Holder>.Instance.Settings.CreateBool(
+            nameof(AnyoneCanSeeMurderAttempt),
+            Colors.Cs("#15a0cf", "Anyone can see failed murder attempt"),
+            false,
+            ShieldFirstKilledPlayer);
         RemoveShieldInFirstKill = Singleton<CustomOption.Holder>.Instance.Settings.CreateBool(
             nameof(RemoveShieldInFirstKill),
             Colors.Cs("#15a0cf", "Remove shield on first kill"),
@@ -111,7 +145,7 @@ public class Shields
 
     public bool Murder(PlayerControl killer, PlayerControl target)
     {
-        if (CheckMurderAttempt(killer, target) == Game.MurderAttemptResult.PerformKill)
+        if (CheckMurderAttempt(killer, target) == MurderAttemptResult.PerformKill)
         {
             return true;
         }
@@ -119,22 +153,27 @@ public class Shields
         return false;
     }
 
-    public Game.MurderAttemptResult CheckMurderAttempt(PlayerControl? killer, PlayerControl target)
-    {
-        // Modified vanilla checks
-        return Utils.AmongUs.IsGameOver() || killer == null || killer.Data == null || killer.Data.IsDead ||
-               killer.Data.Disconnected || target == null || target.Data == null || target.Data.IsDead ||
-               target.Data.Disconnected || IsShielded(target)
-            ? Game.MurderAttemptResult.SuppressKill
-            : Game.MurderAttemptResult.PerformKill;
-    }
-
     [EnoHook(CustomHooks.PlayerControlFixedUpdatePostfix)]
     public static Hooks.Result PlayerControlFixedUpdatePostfix(PlayerControl player)
     {
-        RenderImpostorOutline();
-        RenderShieldOutline(player);
-        RenderRoleOutline();
+        if (Singleton<Shields>.Instance.ShieldFirstKilledPlayer)
+        {
+            RenderShieldOutline(player);
+        }
+
+        var localPlayer = PlayerCache.LocalPlayer;
+        if (localPlayer == null) return Hooks.Result.Continue;
+        if (localPlayer.Data.Role.IsImpostor)
+        {
+            RenderImpostorOutline();
+        }
+
+        var role = CustomRole.GetLocalPlayerRole();
+        if (role is { CanTarget: true })
+        {
+            RenderRoleOutline();
+        }
+
         RenderPlayerColor();
 
         return Hooks.Result.Continue;
@@ -153,41 +192,58 @@ public class Shields
         if (PlayerCache.LocalPlayer == null) return;
         var role = CustomRole.GetLocalPlayerRole();
         if (role == null) return;
-        var nameText = PlayerCache.LocalPlayer.PlayerControl.cosmetics.nameText;
-        nameText.color = role.Color;
+        PlayerCache.LocalPlayer.PlayerControl.cosmetics.nameText.color = role.Color;
+    }
+
+    [EnoHook(CustomHooks.MeetingHudUpdate)]
+    public static Hooks.Result HudManagerUpdate(MeetingHud meetingHud)
+    {
+        RenderPlayerColorInMeeting(meetingHud);
+        return Hooks.Result.Continue;
+    }
+
+    private static void RenderPlayerColorInMeeting(MeetingHud meetingHud)
+    {
+        if (PlayerCache.LocalPlayer == null) return;
+        var player = meetingHud.playerStates.FirstOrDefault(p => p.TargetPlayerId == PlayerCache.LocalPlayer.PlayerId);
+        if (player == null) return;
+        var role = CustomRole.GetLocalPlayerRole();
+        if (role == null) return;
+        player.NameText.color = role.Color;
     }
 
     private static void RenderImpostorOutline()
     {
-        if (PlayerControl.LocalPlayer == null) return;
-        if (PlayerControl.LocalPlayer.Data.RoleType != RoleTypes.Impostor) return;
+        if (PlayerCache.LocalPlayer == null) return;
+        if (PlayerCache.LocalPlayer.Data.RoleType != RoleTypes.Impostor) return;
 
         var target = RenderTarget(false, false, new List<PlayerControl>());
         if (target == null) return;
 
-        if (Singleton<Shields>.Instance.IsShielded(target))
-        {
-            RenderPlayerOutline(
-                target.PlayerId,
-                Colors.Blend(new List<Color> { Color.red, ShieldColor }));
-        }
-        else
-        {
-            RenderPlayerOutline(target.PlayerId, Color.red);
-        }
+        RenderPlayerOutline(
+            target.PlayerId,
+            Singleton<Shields>.Instance.IsShielded(target)
+                ? Colors.Blend(new List<Color> { Color.red, ShieldColor })
+                : Color.red);
     }
 
     private static void RenderRoleOutline()
     {
         if (PlayerCache.LocalPlayer == null) return;
-        var role = CustomRole.GetByPlayer(PlayerCache.LocalPlayer);
-        if (role == null) return;
-        if (!role.CanTarget) return;
+        var role = CustomRole.GetLocalPlayerRole();
+        if (role is not { CanTarget: true }) return;
         var targetId = RenderTarget(false, false, new List<PlayerControl>())?.PlayerId;
         role.GetPlayer(PlayerCache.LocalPlayer.PlayerId).TargetId = targetId;
-        if (targetId != null && Singleton<Shields>.Instance.IsShielded((byte) targetId))
+        if (targetId != null)
         {
-            RenderPlayerOutline(targetId, Colors.Blend(new List<Color> { role.Color, ShieldColor }));
+            if (Singleton<Shields>.Instance.IsShielded((byte) targetId))
+            {
+                RenderPlayerOutline(targetId, Colors.Blend(new List<Color> { role.Color, ShieldColor }));
+            }
+            else
+            {
+                RenderPlayerOutline(targetId, role.Color);
+            }
         }
     }
 
@@ -298,9 +354,36 @@ public class Shields
     [EnoHook(CustomHooks.PlayerControlCheckMurder)]
     public static Hooks.Result PlayerControlCheckMurder(PlayerControl killer, PlayerControl target)
     {
-        return Singleton<Shields>.Instance.CheckMurderAttempt(killer, target) == Game.MurderAttemptResult.PerformKill
+        return Shields.CheckMurderAttempt(killer, target) == MurderAttemptResult.PerformKill
             ? Hooks.Result.ReturnTrue
             : Hooks.Result.ReturnFalse;
+    }
+
+    [MethodRpc((uint) CustomRpc.ShieldedMurderAttempt)]
+    public static void ShieldedMurderAttempt(PlayerControl _, string text)
+    {
+        if (PlayerCache.LocalPlayer == null) return;
+        var murderInfo = Serializer.Deserialize<MurderInfo>(text);
+        if (murderInfo.Murder != PlayerCache.LocalPlayer.PlayerId &&
+            !Singleton<Shields>.Instance.AnyoneCanSeeMurderAttempt) return;
+        if (murderInfo.Murder == PlayerCache.LocalPlayer.PlayerId &&
+            PlayerCache.LocalPlayer.Data.RoleType == RoleTypes.Impostor)
+        {
+            PlayerCache.LocalPlayer.PlayerControl.SetKillTimer(GameOptionsManager.Instance.currentNormalGameOptions
+                .KillCooldown);
+        }
+
+        PlayerCache.GetPlayerById(murderInfo.Target)?.PlayerControl.ShowFailedMurder();
+    }
+
+    [MethodRpc((uint) CustomRpc.MurderAttempt)]
+    public static void MurderAttempt(PlayerControl player, string text)
+    {
+        var murderInfo = Serializer.Deserialize<MurderInfo>(text);
+        var murder = PlayerCache.GetPlayerById(murderInfo.Murder);
+        var target = PlayerCache.GetPlayerById(murderInfo.Target);
+        if (murder == null || target == null) return;
+        murder.PlayerControl.MurderPlayer(target.PlayerControl);
     }
 
 
@@ -320,4 +403,10 @@ public class PlayerShielded
     public bool RemoveShieldOnFirstMeeting { get; set; }
     public bool AnyoneCanSeeShield { get; set; } = true;
     public bool AnyoneCanSeeMurderAttempt { get; set; }
+}
+
+public class MurderInfo
+{
+    public byte? Murder { get; set; }
+    public byte Target { get; set; }
 }

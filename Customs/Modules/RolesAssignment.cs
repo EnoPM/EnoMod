@@ -58,12 +58,12 @@ public static class RolesAssignment
     }
 
     [MethodRpc((uint) CustomRpc.UpdateRoleInfo)]
-    public static void UpdateRoleInfo(PlayerControl player, string text)
+    public static void UpdateRoleInfo(PlayerControl sender, string text)
     {
         var role = RoleData.Deserialize(text);
         var localPlayer = PlayerCache.LocalPlayer;
         if (localPlayer == null) return;
-        CustomRole.Roles.Find(cr => cr.Id == role.Id)?.UpdateFromData(role);
+        CustomRole.Roles.Find(cr => cr.Name == role.Name)?.UpdateFromData(role);
         if (role.Players.Any(rp => rp.PlayerId == localPlayer.PlayerId))
         {
             System.Console.WriteLine($"### I am {role.Name} in this game");

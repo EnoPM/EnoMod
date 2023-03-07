@@ -13,8 +13,6 @@ public class Jester : CustomRole
 
     private const string JesterSabotageText = "[ J E S T E R  S A B O T A G E ]";
 
-    private byte? _winner;
-
     public bool JesterSabotageActive;
 
     public Jester()
@@ -26,6 +24,7 @@ public class Jester : CustomRole
         HexColor = "#c744c5";
         CanTarget = false;
         JesterSabotageActive = false;
+        HasTasks = false;
     }
 
     [EnoHook(CustomHooks.LoadCustomOptions)]
@@ -60,14 +59,14 @@ public class Jester : CustomRole
     [EnoHook(CustomHooks.LoadCustomButtons)]
     public Hooks.Result CreateCustomButtons(HudManager hudManager)
     {
-        var jesterButtonSprite = Utils.Resources.LoadSpriteFromResources("EnoMod.Resources.Buttons.Jester.png", 115f);
-        if (jesterButtonSprite == null) return Hooks.Result.Continue;
+        var buttonSprite = Utils.Resources.LoadSpriteFromResources("EnoMod.Resources.Buttons.Jester.png", 115f);
+        if (buttonSprite == null) return Hooks.Result.Continue;
         _jesterButton = new CustomButton(
             OnJesterButtonClick,
             HasJesterButton,
             CouldUseJesterButton,
-            OnMeetingEnd,
-            jesterButtonSprite,
+            ResetJesterButtonCouldown,
+            buttonSprite,
             CustomButton.ButtonPositions.UpperRowRight,
             hudManager,
             KeyCode.F,
@@ -155,11 +154,20 @@ public class Jester : CustomRole
     [EnoHook(CustomHooks.MeetingEnded)]
     public Hooks.Result OnMeetingEnd(ExileController exileController, GameData.PlayerInfo? exiled)
     {
-        OnMeetingEnd();
+        System.Console.WriteLine($"Exiled : {exiled?.PlayerName}");
+        ResetJesterButtonCouldown();
         if (exiled == null) return Hooks.Result.Continue;
         if (HasPlayer(exiled.PlayerId))
         {
-            _winner = exiled.PlayerId;
+            System.Console.WriteLine($"Jester set winner : {exiled.PlayerName}");
+            if (!EndGameState.IsEndGame)
+            {
+                EndGameState.State.IsEndGame = true;
+                EndGameState.State.Winners.Add(exiled.PlayerId);
+                EndGameState.State.Color = HexColor;
+                EndGameState.State.Title = $"{Name} win!";
+                EndGameState.Share();
+            }
         }
 
         return Hooks.Result.Continue;
@@ -185,12 +193,7 @@ public class Jester : CustomRole
         return Hooks.Result.ReturnFalse;
     }
 
-    public override bool TriggerEndGame()
-    {
-        return _winner != null;
-    }
-
-    private void OnMeetingEnd()
+    private void ResetJesterButtonCouldown()
     {
         if (_couldown != null && _jesterButton != null)
         {
@@ -222,7 +225,7 @@ public class Jester : CustomRole
         var player = PlayerCache.LocalPlayer;
         if (player == null) return;
         JesterSabotageStart(player);
-        OnMeetingEnd();
+        ResetJesterButtonCouldown();
     }
 
     private void OnJesterButtonEffectEnd()
@@ -230,7 +233,7 @@ public class Jester : CustomRole
         var player = PlayerCache.LocalPlayer;
         if (player == null) return;
         JesterSabotageEnd(player);
-        OnMeetingEnd();
+        ResetJesterButtonCouldown();
     }
 
     [MethodRpc((uint) CustomRpc.JesterSabotageStart)]

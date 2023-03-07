@@ -1,4 +1,7 @@
-﻿using EnoMod.Kernel;
+﻿using System.Collections.Generic;
+using System.Linq;
+using AmongUs.GameOptions;
+using EnoMod.Kernel;
 using EnoMod.Utils;
 
 namespace EnoMod.Customs.Modules;
@@ -8,16 +11,60 @@ public static class EndGame
     [EnoHook(CustomHooks.EndGameCheck)]
     public static Hooks.Result EndGameCheck()
     {
-        foreach (var role in CustomRole.Roles)
-        {
-            if (role.TriggerEndGame()) return Hooks.Result.ReturnTrue;
-        }
+        CheckEndGame();
+        return EndGameState.IsEndGame ? Hooks.Result.ReturnTrue : Hooks.Result.Continue;
+    }
+
+    private static void CheckEndGame()
+    {
+        if (Singleton<CustomOption.Holder>.Instance.DebugMode) return;
         var statistics = new PlayerStatistics();
-        if (CheckAndEndGameForSabotageWin()) return Hooks.Result.ReturnFalse;
-        if (CheckAndEndGameForTaskWin()) return Hooks.Result.ReturnFalse;
-        if (CheckAndEndGameForImpostorWin(statistics)) return Hooks.Result.ReturnFalse;
-        if (CheckAndEndGameForCrewmateWin(statistics)) return Hooks.Result.ReturnFalse;
-        return Hooks.Result.ReturnFalse;
+        if (CheckAndEndGameForSabotageWin() || CheckAndEndGameForImpostorWin(statistics))
+        {
+            EndGameState.State.IsEndGame = true;
+            EndGameState.State.Color = "#FF0000";
+            EndGameState.State.Title = "Impostor win";
+            EndGameState.State.Winners = PlayerCache.AllPlayers.Where(IsImpostor).Select(p => p.PlayerId).ToList();
+        }
+        else if (CheckAndEndGameForTaskWin() || CheckAndEndGameForCrewmateWin(statistics))
+        {
+            EndGameState.State.IsEndGame = true;
+            EndGameState.State.Color = "#63e5ff";
+            EndGameState.State.Title = "Crewmate win";
+            EndGameState.State.Winners = PlayerCache.AllPlayers.Where(IsCrewmate).Select(p => p.PlayerId).ToList();
+        }
+
+        if (EndGameState.State.IsEndGame)
+        {
+            EndGameState.Share();
+        }
+    }
+
+    private static bool IsImpostor(PlayerCache player)
+    {
+        var impostorsRoles = new List<RoleTypes>
+            { RoleTypes.Impostor, RoleTypes.Shapeshifter, RoleTypes.ImpostorGhost };
+        return impostorsRoles.Contains(player.Data.RoleType);
+    }
+
+    private static bool IsCrewmate(PlayerCache player)
+    {
+        var crewmateRoles = new List<RoleTypes>
+            { RoleTypes.Crewmate, RoleTypes.Engineer, RoleTypes.Scientist, RoleTypes.CrewmateGhost };
+        var role = CustomRole.GetByPlayer(player);
+        if (crewmateRoles.Contains(player.Data.RoleType))
+        {
+            return role == null || role.Team == CustomRole.Teams.Crewmate;
+        }
+
+        return false;
+    }
+
+    [EnoHook(CustomHooks.ExileControllerWrapUp)]
+    public static Hooks.Result ExileControllerWrapUp(ExileController exileController)
+    {
+        CustomButton.MeetingEndedUpdate();
+        return Hooks.Result.Continue;
     }
 
     private static bool CheckAndEndGameForTaskWin()

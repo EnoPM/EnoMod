@@ -1,0 +1,2 @@
+﻿Get-Process | Where-Object {$_.Path -like "C:\Program Files (x86)\Steam\steamapps\common\Among Us - Dev\*"} | Stop-Process -Force -processname {$_.ProcessName}
+Get-Process | Where-Object {$_.Path -like "C:\Program Files (x86)\Steam\steamapps\common\Among Us - DevAlt\*"} | Stop-Process -Force -processname {$_.ProcessName}
