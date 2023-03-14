@@ -87,7 +87,7 @@ public class Jester : CustomRole
         if (!JesterSabotageActive || Utils.AmongUs.IsCommunicationsDisabled()) return Hooks.Result.ReturnTrue;
         for (var j = 0; j < cameras.ViewPorts.Length; j++)
         {
-            cameras.SabText[j].color = Color.white;
+            cameras.SabText[j].color = Color;
             cameras.SabText[j].text = JesterSabotageText;
             cameras.SabText[j].SetFaceColor(Color);
         }
@@ -156,8 +156,8 @@ public class Jester : CustomRole
     {
         System.Console.WriteLine($"Exiled : {exiled?.PlayerName}");
         ResetJesterButtonCouldown();
-        if (exiled == null) return Hooks.Result.Continue;
-        if (HasPlayer(exiled.PlayerId))
+        if (exiled == null || PlayerCache.LocalPlayer == null) return Hooks.Result.Continue;
+        if (HasPlayer(exiled.PlayerId) && exiled.PlayerId == PlayerCache.LocalPlayer.PlayerId)
         {
             System.Console.WriteLine($"Jester set winner : {exiled.PlayerName}");
             if (!EndGameState.IsEndGame)

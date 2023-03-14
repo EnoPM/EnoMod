@@ -11,8 +11,9 @@ public static class EndGame
     [EnoHook(CustomHooks.EndGameCheck)]
     public static Hooks.Result EndGameCheck()
     {
+        if (!Utils.AmongUs.IsHost()) return Hooks.Result.Continue;
         CheckEndGame();
-        return EndGameState.IsEndGame ? Hooks.Result.ReturnTrue : Hooks.Result.Continue;
+        return Hooks.Result.Continue;
     }
 
     private static void CheckEndGame()
@@ -34,7 +35,7 @@ public static class EndGame
             EndGameState.State.Winners = PlayerCache.AllPlayers.Where(IsCrewmate).Select(p => p.PlayerId).ToList();
         }
 
-        if (EndGameState.State.IsEndGame)
+        if (!EndGameState.IsEndGame && EndGameState.State.IsEndGame)
         {
             EndGameState.Share();
         }
@@ -69,8 +70,9 @@ public static class EndGame
 
     private static bool CheckAndEndGameForTaskWin()
     {
-        if (GameData.Instance.TotalTasks <= 0 ||
-            GameData.Instance.TotalTasks > GameData.Instance.CompletedTasks) return false;
+        var totalTasks = PlayerCache.AllPlayers.Where(IsCrewmate).Select(p => p.PlayerControl.myTasks.Count).ToList().Sum();
+        var completedTasks = PlayerCache.AllPlayers.Where(IsCrewmate).Select(p => p.PlayerControl.myTasks.ToArray().Where(t => t.IsComplete).ToList().Count).ToList().Sum();
+        if (totalTasks <= 0 || totalTasks > completedTasks) return false;
         // __instance.enabled = false;
         GameManager.Instance.RpcEndGame(GameOverReason.HumansByTask, false);
         return true;

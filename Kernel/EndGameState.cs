@@ -48,7 +48,7 @@ public static class EndGameState
     public static void Share()
     {
         if (PlayerCache.LocalPlayer == null) return;
-        ShareEndGameState(PlayerCache.LocalPlayer, Serializer.Serialize(State));
+        RequestEndGame(PlayerCache.LocalPlayer, Serializer.Serialize(State));
     }
 
     public static void Reset()
@@ -57,27 +57,41 @@ public static class EndGameState
         _updatedPlayers.Clear();
     }
 
+    [MethodRpc((uint) CustomRpc.RequestEndGame)]
+    public static void RequestEndGame(PlayerControl player, string text)
+    {
+        if (!Utils.AmongUs.IsHost() || PlayerCache.LocalPlayer == null) return;
+        System.Console.WriteLine($"{player.Data.PlayerName} requested an end game");
+        var state = Serializer.Deserialize<SerializableEndGameState>(text);
+        UpdateFromData(state);
+        ShareEndGameState(PlayerCache.LocalPlayer, Serializer.Serialize(State));
+    }
+
     [MethodRpc((uint) CustomRpc.ShareEndGameState)]
     public static void ShareEndGameState(PlayerControl sender, string text)
     {
         if (PlayerCache.LocalPlayer == null) return;
         System.Console.WriteLine($"[{PlayerCache.LocalPlayer.Data.PlayerName}] I receive ShareEndGameState");
         var state = Serializer.Deserialize<SerializableEndGameState>(text);
-        UpdateFromData(state);
+        if (!Utils.AmongUs.IsHost()) UpdateFromData(state);
         EndGameStateReceived(PlayerCache.LocalPlayer, string.Empty);
         if (State.IsEndGame)
         {
             System.Console.WriteLine($"[{PlayerCache.LocalPlayer?.Data.PlayerName}] I start Instance EndGame");
-            // GameManager.Instance.RpcEndGame(GameOverReason.HumansByTask, false);
         }
     }
 
     [MethodRpc((uint) CustomRpc.EndGameStateReceived)]
     public static void EndGameStateReceived(PlayerControl player, string text)
     {
+        if (!Utils.AmongUs.IsHost()) return;
         if (!_updatedPlayers.Contains(player.PlayerId))
         {
             _updatedPlayers.Add(player.PlayerId);
+            if (IsEndGame)
+            {
+                GameManager.Instance.RpcEndGame(GameOverReason.HumansByTask, false);
+            }
         }
     }
 }
@@ -85,14 +99,6 @@ public static class EndGameState
 [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameEnd))]
 public static class AmongUsClientOnGameEndPatch
 {
-    private static GameOverReason _gameOverReason;
-
-    public static void Prefix(AmongUsClient __instance, [HarmonyArgument(0)] ref EndGameResult endGameResult)
-    {
-        _gameOverReason = endGameResult.GameOverReason;
-        if ((int) endGameResult.GameOverReason >= 10) endGameResult.GameOverReason = GameOverReason.ImpostorByKill;
-    }
-
     public static void Postfix(AmongUsClient __instance, [HarmonyArgument(0)] ref EndGameResult endGameResult)
     {
         CustomRole.ClearPlayers();
@@ -115,7 +121,7 @@ public static class EndGameManagerSetEverythingUp
         }
 
         System.Console.WriteLine($"EndGameState.State.Winners: {EndGameState.State.Winners.Count}");
-        System.Console.WriteLine($"PlayerCache.AllPlayers: {PlayerCache.AllPlayers.Count}");
+        System.Console.WriteLine($"PlayerCache.AllPlayers: {PlayerControl.AllPlayerControls.Count}");
 
         if (PlayerCache.LocalPlayer != null)
         {

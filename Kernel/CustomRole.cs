@@ -150,7 +150,7 @@ public abstract class CustomRole : RoleData
         return Players.Any(p => p.PlayerId == playerId);
     }
 
-    public RoleData.RolePlayer GetPlayer(byte playerId)
+    public RolePlayer GetPlayer(byte playerId)
     {
         if (!HasPlayer(playerId)) throw new EnoModException($"Role {Name} dont contains player {playerId}");
         return Players.Find(p => p.PlayerId == playerId)!;

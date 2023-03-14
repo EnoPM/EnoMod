@@ -513,14 +513,14 @@ public static class CustomHookPatches
             return true;
         }
     }
-    /*
+
     [HarmonyPatch(typeof(PlayerPurchasesData), nameof(PlayerPurchasesData.GetPurchase))]
-    public static class PlayerPurchasesDataGetPurchase
+    public static class PlayerPurchasesDataGetPurchasePatch
     {
-        public static bool Prefix(PlayerPurchasesData __instance, [HarmonyArgument(0)] string itemKey, [HarmonyArgument(1)] string bundleKey)
+        [HarmonyReversePatch]
+        public static void Postfix(out bool __result)
         {
-            return true;
+            __result = true;
         }
     }
-    */
 }

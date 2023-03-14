@@ -22,7 +22,7 @@ public class CustomOption
 
     public static ConfigEntry<string>? VanillaSettings;
 
-    private static int _preset;
+    private static int _preset = 1;
 
     public static implicit operator string(CustomOption option)
     {
@@ -119,8 +119,14 @@ public class CustomOption
         Parent = parent;
         IsHeader = isHeader;
         Type = type;
-        if (Key == nameof(Singleton<CustomOption.Holder>.Instance.Preset)) return;
-        Entry = EnoModPlugin.Instance.Config.Bind($"Preset{_preset}", Key, SelectionIndex);
+        if (Key == nameof(Singleton<Holder>.Instance.Preset))
+        {
+            Entry = EnoModPlugin.Instance.Config.Bind($"MainConfig", Key, SelectionIndex);
+        }
+        else
+        {
+            Entry = EnoModPlugin.Instance.Config.Bind($"Preset{_preset}", Key, SelectionIndex);
+        }
         SelectionIndex = Mathf.Clamp(Entry.Value, 0, StringSelections.Count - 1);
     }
 
@@ -136,7 +142,7 @@ public class CustomOption
             stringOption.ValueText.text = StringSelections[SelectionIndex].ToString();
 
             if (!AmongUsClient.Instance.AmHost || !PlayerCache.LocalPlayer?.PlayerControl) return;
-            if (Key == nameof(Singleton<CustomOption.Holder>.Instance.Preset) && SelectionIndex != _preset)
+            if (Key == nameof(Singleton<Holder>.Instance.Preset) && SelectionIndex != _preset)
             {
                 Tab.SwitchPreset(SelectionIndex);
                 ShareOptionChange();
@@ -147,7 +153,7 @@ public class CustomOption
                 ShareOptionChange();
             }
         }
-        else if (Key == nameof(Singleton<CustomOption.Holder>.Instance.Preset) && AmongUsClient.Instance.AmHost && PlayerControl.LocalPlayer)
+        else if (Key == nameof(Singleton<Holder>.Instance.Preset) && AmongUsClient.Instance.AmHost && PlayerControl.LocalPlayer)
         {
             // Share the preset switch for random maps, even if the menu isnt open!
             Tab.SwitchPreset(SelectionIndex);
@@ -272,12 +278,12 @@ public class CustomOption
         public static void SwitchPreset(int newPreset)
         {
             SaveVanillaOptions();
-            _preset = newPreset;
+            _preset = newPreset + 1;
             VanillaSettings = EnoModPlugin.Instance.Config.Bind($"Preset{_preset}", "GameOptions", string.Empty);
             LoadVanillaOptions();
             foreach (var setting in Tabs.SelectMany(settingsTab => settingsTab.Settings))
             {
-                if (setting.Key == nameof(Singleton<CustomOption.Holder>.Instance.Preset)) continue;
+                if (setting.Key == nameof(Singleton<Holder>.Instance.Preset)) continue;
                 setting.Entry =
                     EnoModPlugin.Instance.Config.Bind($"Preset{_preset}", $"{setting.Key}", setting.SelectionIndex);
                 setting.SelectionIndex = Mathf.Clamp(setting.Entry.Value, 0, setting.StringSelections.Count - 1);
@@ -350,10 +356,15 @@ public class CustomOption
             Roles = new Tab("EnoRolesSettings", "Roles settings");
             Tab.Tabs.Add(Roles);
 
-            Preset = Settings.CreateStringList(
+            Preset = Settings.CreateFloatList(
                 nameof(Preset),
                 Utils.Colors.Cs("#504885", "Current preset"),
-                new List<string> { "Preset 0", "Preset 1", "Preset 2", "Preset 3", "Preset 4", "Preset 5" });
+                1f,
+                5f,
+                1f,
+                1f,
+                null,
+                "Preset ");
             EnableRoles = Settings.CreateBool(
                 nameof(EnableRoles),
                 Utils.Colors.Cs("#ff1010", "Enable roles"),

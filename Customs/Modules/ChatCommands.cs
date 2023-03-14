@@ -53,7 +53,8 @@ public static class ChatCommands
         if (PlayerCache.LocalPlayer == null) return Hooks.Result.ReturnFalse;
         var player = GetPlayerByName(playerName);
         if (player == null) return Hooks.Result.ReturnFalse;
-        RevivePlayer(PlayerCache.LocalPlayer.PlayerControl,
+        RevivePlayer(
+            PlayerCache.LocalPlayer.PlayerControl,
             Serializer.Serialize(new PlayerInfo(player.PlayerControl.PlayerId)));
         return Hooks.Result.ReturnFalse;
     }

@@ -55,6 +55,7 @@ public enum CustomRpc : uint
     JesterSabotageEnd,
     ShareCustomRoles,
     RevivePlayer,
+    RequestEndGame,
     ShareEndGameState,
     EndGameStateReceived,
     ResetRoles,

@@ -4,6 +4,7 @@ using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using EnoMod.Kernel;
+using EnoMod.Kernel.EnoMenu;
 using HarmonyLib;
 using Reactor;
 using TMPro;
@@ -35,10 +36,14 @@ public partial class EnoModPlugin : BasePlugin
 
     private Harmony Harmony { get; } = new(Id);
 
+    public MainComponent Component { get; private set; } = null!;
+
     public override void Load()
     {
         Instance = this;
         Logger = Log;
+
+        Component = this.AddComponent<MainComponent>();
 
         Harmony.PatchAll();
 
