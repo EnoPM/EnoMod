@@ -215,9 +215,9 @@ public class Jester : CustomRole
 
     private bool HasJesterButton()
     {
-        if (AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started) return false;
+        if (AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started || PlayerCache.LocalPlayer == null) return false;
         var role = GetLocalPlayerRole();
-        return role != null && role.Id == Id;
+        return !PlayerCache.LocalPlayer.Data.IsDead && role != null && role.Id == Id;
     }
 
     private void OnJesterButtonClick()

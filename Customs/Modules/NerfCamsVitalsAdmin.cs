@@ -12,16 +12,18 @@ public static class NerfCamsVitalsAdmin
     public static CustomOption MaxPlayersToUseVitals;
     public static CustomOption MaxPlayersToUseAdmin;
 
+    private static Color _color = Colors.FromHex("#4f4545");
+
     [EnoHook(CustomHooks.LoadCustomOptions)]
     public static Hooks.Result LoadCustomOptions()
     {
         EnableInfosNerf = Singleton<CustomOption.Holder>.Instance.Settings.CreateBool(
             nameof(EnableInfosNerf),
-            Colors.Cs("#4f4545", "Nerf information"),
+            Colors.Cs(_color, "Nerf information"),
             false);
         MaxPlayersToUseCameras = Singleton<CustomOption.Holder>.Instance.Settings.CreateFloatList(
             nameof(MaxPlayersToUseCameras),
-            Colors.Cs("#4f4545", "Disable cameras above"),
+            Colors.Cs(_color, "Disable cameras above"),
             0f,
             15f,
             0f,
@@ -31,7 +33,7 @@ public static class NerfCamsVitalsAdmin
             " players left");
         MaxPlayersToUseVitals = Singleton<CustomOption.Holder>.Instance.Settings.CreateFloatList(
             nameof(MaxPlayersToUseVitals),
-            Colors.Cs("#4f4545", "Disable vitals above"),
+            Colors.Cs(_color, "Disable vitals above"),
             0f,
             15f,
             0f,
@@ -41,7 +43,7 @@ public static class NerfCamsVitalsAdmin
             " players left");
         MaxPlayersToUseAdmin = Singleton<CustomOption.Holder>.Instance.Settings.CreateFloatList(
             nameof(MaxPlayersToUseAdmin),
-            Colors.Cs("#4f4545", "Disable admin above"),
+            Colors.Cs(_color, "Disable admin above"),
             0f,
             15f,
             0f,
@@ -131,7 +133,6 @@ public static class NerfCamsVitalsAdmin
             cameras.SabText.SetFaceColor(new Color32(255, 200, 0, byte.MaxValue));
         }
 
-        //Toggle ON/OFF depending on maxPlayersToAllowCameras parameter
         if (!cameras.isStatic && IsCamsDisabled)
         {
             cameras.isStatic = true;
@@ -155,10 +156,10 @@ public static class NerfCamsVitalsAdmin
         minigame.Dots[minigame.currentCamera].sprite = minigame.DotDisabled;
         minigame.currentCamera = (minigame.currentCamera + direction).Wrap(minigame.survCameras.Length);
         minigame.Dots[minigame.currentCamera].sprite = minigame.DotEnabled;
-        var survCamera = minigame.survCameras[minigame.currentCamera];
+        var camera = minigame.survCameras[minigame.currentCamera];
         minigame.Camera.transform.position =
-            survCamera.transform.position + minigame.survCameras[minigame.currentCamera].Offset;
-        minigame.LocationName.text = survCamera.CamName;
+            camera.transform.position + minigame.survCameras[minigame.currentCamera].Offset;
+        minigame.LocationName.text = camera.CamName;
         return Hooks.Result.ReturnFalse;
     }
 
