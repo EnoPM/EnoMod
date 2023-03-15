@@ -9,6 +9,7 @@ namespace EnoMod.Customs.Roles;
 public class Sheriff : CustomRole
 {
     private CustomOption? _couldown;
+    private CustomOption? _canKillNeutral;
     private CustomButton? _killButton;
 
     public Sheriff()
@@ -37,6 +38,11 @@ public class Sheriff : CustomRole
             NumberCustomOption,
             string.Empty,
             "s");
+        _canKillNeutral = Singleton<CustomOption.Holder>.Instance.Roles.CreateBool(
+            $"{Name}CanKillNeutral",
+            CustomOption.Cs(Color, $"{Name} can kill neutral"),
+            true,
+            NumberCustomOption);
         return Hooks.Result.Continue;
     }
 
@@ -91,7 +97,7 @@ public class Sheriff : CustomRole
     private void OnKillButtonClick()
     {
         var player = PlayerCache.LocalPlayer;
-        if (player == null) return;
+        if (player == null || _canKillNeutral == null) return;
         var rp = Players.Find(rp => rp.PlayerId == player.PlayerId && rp.TargetId != null);
         if (rp?.TargetId == null) return;
         var killer = PlayerCache.GetPlayerById(rp.PlayerId);
@@ -109,7 +115,7 @@ public class Sheriff : CustomRole
         }
         else
         {
-            if (target.Data.RoleType != RoleTypes.Impostor && targetRole is not { Team: Teams.Neutral })
+            if (target.Data.RoleType != RoleTypes.Impostor || (_canKillNeutral && targetRole is not { Team: Teams.Neutral }))
             {
                 target = player;
             }

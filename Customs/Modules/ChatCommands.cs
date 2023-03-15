@@ -43,8 +43,7 @@ public static class ChatCommands
         if (player == null) return Hooks.Result.ReturnFalse;
         var role = CustomRole.Roles.Find(role =>
             string.Equals(role.Name, roleName, StringComparison.OrdinalIgnoreCase));
-        if (role == null) return Hooks.Result.ReturnFalse;
-        role.AddPlayer(player.PlayerId);
+        role?.AddPlayer(player.PlayerId);
         return Hooks.Result.ReturnFalse;
     }
 
